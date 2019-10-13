@@ -1,5 +1,6 @@
 import React from 'react'
 import { AsyncStorage } from 'react-native'
+import * as Font from 'expo-font'
 import {
   LsCountDown,
   LsCountdownOptions,
@@ -8,7 +9,9 @@ import {
 import Dead from '../components/Dead'
 import Clock from '../components/Clock'
 import Indicator from '../components/Indicator'
-import { getLocationAsync } from '../functions/location'
+import { getLocationAsync, getTown, getRandomInt } from '../functions'
+
+// TODO: Display when Days with 3 digits
 export class Main extends React.Component {
   constructor(props) {
     super(props)
@@ -23,47 +26,55 @@ export class Main extends React.Component {
       isOver: false,
       showDeath: false,
       location: '',
-      city: ''
+      city: '',
+      onError: ''
     }
   }
 
-  getRandomInt(max = 25150) {
-    return Math.floor(Math.random() * Math.floor(max))
-  }
-
-  _storeData = async (key, value) => {
-    try {
-      await AsyncStorage.setItem(key, JSON.stringify(value))
-    } catch (error) {
-      // Error saving data
-      console.log(error)
-    }
-  }
-
-  _removeData = async key => {
-    try {
-      await AsyncStorage.removeItem(key)
-    } catch (error) {
-      console.log(error)
-    }
+  _townNotFound = () => {
+    return setTimeout(() => {
+      this.setState({
+        showDeath: true
+      })
+    }, 2000)
   }
 
   async componentDidMount() {
-    // Create a new options class with the parameters
     let targetDate
     try {
+      // First loading Fonts
+      await Font.loadAsync({
+        'oswald-regular': require('../assets/fonts/Oswald-Regular.ttf')
+      })
+
       targetDate = await AsyncStorage.getItem('date')
-      // targetDate = new Date('September 30, 2019 15:24:00') // used for test
+      // targetDate = false // used for reinit during dev
+      // targetDate = 'October 13, 2019 22:37:00' // used for test
       if (!targetDate) {
+        console.log('**')
         targetDate = new Date(
-          new Date().getTime() + this.getRandomInt() * 24 * 60 * 60 * 1000
+          new Date().getTime() + getRandomInt() * 24 * 60 * 60 * 1000
         )
-        this._storeData('date', targetDate.toISOString())
+        await AsyncStorage.setItem('date', targetDate.toISOString())
+      } else if (
+        new Date(Date.parse(targetDate)).getTime() < new Date().getTime()
+      ) {
+        return this.setState({
+          isReady: true,
+          isOver: true,
+          showDeath: true
+        })
       } else {
         targetDate = new Date(Date.parse(targetDate))
       }
     } catch (error) {
-      console.log(error)
+      // console.log(error)
+      return this.setState({
+        isReady: true,
+        isOver: true,
+        showDeath: true,
+        onError: 'Oups, an error has preceded death!'
+      })
     }
 
     const onStart = async () => {}
@@ -92,23 +103,21 @@ export class Main extends React.Component {
     const onStop = async () => {
       try {
         let location = await getLocationAsync()
+        let result = await getTown(location)
+        let city = result.data.Response.View[0].Result[0].Location.Address.City
         if (location) {
           return setTimeout(() => {
             this.setState({
               showDeath: true,
               location: location,
-              city: 'CITY'
+              city: city
             })
           }, 2000)
         }
+        return this._townNotFound()
       } catch (error) {
-        console.log(error)
+        this._townNotFound()
       }
-      setTimeout(() => {
-        this.setState({
-          showDeath: true
-        })
-      }, 2000)
     }
     const sufixes = new LsCountdownSufixes({
       years: '',
@@ -132,7 +141,8 @@ export class Main extends React.Component {
   render() {
     if (!this.state.isReady) return <Indicator></Indicator>
 
-    if (this.state.showDeath) return <Dead></Dead>
+    if (this.state.showDeath)
+      return <Dead city={this.state.city} onError={this.state.onError}></Dead>
 
     return (
       <Clock

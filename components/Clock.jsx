@@ -1,31 +1,121 @@
 import React, { Component } from 'react'
-import { Text, View, StyleSheet } from 'react-native'
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity
+} from 'react-native'
 
 export class Clock extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      showAbout: false
+    }
+
+    this.additionnalStyleYears = { color: '#fff' }
+    this.additionnalStyleDays = { color: '#fff' }
+    this.additionnalStyleHours = { color: '#fff' }
+    this.additionnalStyleMinutes = { color: '#fff' }
+    this.additionnalStyleSeconds = { color: '#fff' }
+  }
+
   render() {
+    if (this.state.showAbout)
+      return (
+        <View>
+          <Text>About this app...</Text>
+          <TouchableOpacity
+            onPress={() =>
+              this.setState({
+                showAbout: false
+              })
+            }>
+            <Text>Close</Text>
+          </TouchableOpacity>
+        </View>
+      )
+
+    this.additionnalStyleYears =
+      this.props.years === '00' ? { color: 'red' } : { color: '#fff' }
+    this.additionnalStyleDays =
+      this.props.years === '00' &&
+      this.props.days === '00' &&
+      this.additionnalStyleYears.color === 'red'
+        ? { color: 'red' }
+        : { color: '#fff' }
+    this.additionnalStyleHours =
+      this.props.years === '00' &&
+      this.props.days === '00' &&
+      this.props.hours === '00' &&
+      this.additionnalStyleDays.color === 'red'
+        ? { color: 'red' }
+        : { color: '#fff' }
+    this.additionnalStyleMinutes =
+      this.props.years === '00' &&
+      this.props.days === '00' &&
+      this.props.hours === '00' &&
+      this.props.minutes === '00' &&
+      this.additionnalStyleHours.color === 'red'
+        ? { color: 'red' }
+        : { color: '#fff' }
+    this.additionnalStyleSeconds =
+      this.props.years === '00' &&
+      this.props.days === '00' &&
+      this.props.hours === '00' &&
+      this.props.days === '00' &&
+      this.props.seconds === '00' &&
+      this.additionnalStyleMinutes.color === 'red'
+        ? { color: 'red' }
+        : { color: '#fff' }
+
     return (
-      <View style={style.container}>
-        <View style={style.display}>
-          <Text style={style.number}> {this.props.years} </Text>
-          <Text style={style.text}> years </Text>
+      <ScrollView style={{ flex: 1, backgroundColor: 'black' }}>
+        <View style={[style.row, { marginTop: -20 }]}>
+          <View style={style.emptyZone}></View>
+          <Text style={[style.number, this.additionnalStyleYears]}>
+            {this.props.years}
+          </Text>
+          <Text style={[style.text, this.additionnalStyleYears]}>YRS</Text>
         </View>
-        <View style={style.display}>
-          <Text style={style.number}> {this.props.days} </Text>
-          <Text style={style.text}> days </Text>
+        <View style={style.row}>
+          <View style={style.emptyZone}></View>
+          <Text style={[style.number, this.additionnalStyleDays]}>
+            {this.props.days}
+          </Text>
+          <Text style={[style.text, this.additionnalStyleDays]}>DAY</Text>
         </View>
-        <View style={style.display}>
-          <Text style={style.number}> {this.props.hours} </Text>
-          <Text style={style.text}> hours </Text>
+        <View style={style.row}>
+          <View style={style.emptyZone}></View>
+          <Text style={[style.number, this.additionnalStyleHours]}>
+            {this.props.hours}
+          </Text>
+          <Text style={[style.text, this.additionnalStyleHours]}>HRS</Text>
         </View>
-        <View style={style.display}>
-          <Text style={style.number}> {this.props.minutes} </Text>
-          <Text style={style.text}> minutes </Text>
+        <View style={style.row}>
+          <View style={style.emptyZone}></View>
+          <Text style={[style.number, this.additionnalStyleMinutes]}>
+            {this.props.minutes}
+          </Text>
+          <Text style={[style.text, this.additionnalStyleMinutes]}>MIN</Text>
         </View>
-        <View style={style.display}>
-          <Text style={style.number}> {this.props.seconds} </Text>
-          <Text style={style.text}> seconds </Text>
+        <View style={[style.row, { marginBottom: 0 }]}>
+          <View style={[style.emptyZone, { justifyContent: 'flex-start' }]}>
+            <TouchableOpacity
+              onPress={() => {
+                this.setState({ showAbout: true })
+              }}>
+              <Text>About</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={[style.number, this.additionnalStyleSeconds]}>
+            {this.props.seconds}
+          </Text>
+          <Text style={[style.text, this.additionnalStyleSeconds]}>SEC</Text>
         </View>
-      </View>
+      </ScrollView>
     )
   }
 }
@@ -35,24 +125,32 @@ export default Clock
 const style = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'space-around',
-    paddingVertical: 30
+    backgroundColor: '#000'
   },
-  display: {
-    alignItems: 'center',
+  emptyZone: {
+    flex: 1
+  },
+  row: {
+    flex: 1,
+    flexDirection: 'row',
+    marginBottom: -20,
     justifyContent: 'center'
   },
   number: {
-    fontSize: 70,
+    fontFamily: 'oswald-regular',
+    fontSize: 100,
     color: '#fff',
-    fontWeight: 'bold',
-    height: 76
+    height: 135,
+    width: 128,
+    opacity: 0.8
   },
   text: {
+    flex: 1,
+    textAlignVertical: 'bottom',
+    fontFamily: 'oswald-regular',
     fontSize: 30,
     color: '#fff',
-    fontWeight: 'bold',
-    height: 38
+    opacity: 0.8,
+    marginLeft: -17
   }
 })
